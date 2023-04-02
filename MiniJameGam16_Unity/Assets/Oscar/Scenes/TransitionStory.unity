@@ -179,6 +179,9 @@ MonoBehaviour:
   - Please watch my cat while I head out to run a few errands.
   - My cat is quite a troublemaker, I've included a list of rules you should follow.
   - To help you out, I've locked the cat in the bathroom.
+  - Please do not let the cat jump in the water, they don't like it.
+  - Oh, and don't let the cat play with the duct tape.
+  - The cat always ends up on the ceiling.
   - Good luck, I'll see you in a few hours!
 --- !u!114 &86527858
 MonoBehaviour:
@@ -394,10 +397,10 @@ RectTransform:
   m_Father: {fileID: 1004351555}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1150, y: 600}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &249428244
 MonoBehaviour:
