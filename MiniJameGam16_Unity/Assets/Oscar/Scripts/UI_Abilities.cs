@@ -11,7 +11,7 @@ public class UI_Abilities : MonoBehaviour
     public Image wee;
     public Image business;
 
-    private bool isTapeCollected = false;
+    public bool isTapeCollected = false;
     private bool isScratchEquipped = false;
     private bool isTapeEquipped = false;
     private bool isWeeEquipped = false;

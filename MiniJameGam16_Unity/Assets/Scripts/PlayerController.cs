@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private int tapeAmmo = 0;
 
+    public UI_Abilities uiAbilities;
+
     public LayerMask moveableLayerMask;
     public LayerMask interactableLayerMask;
     public LayerMask groundLayerMask;
@@ -37,10 +39,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float clawForce = 2.5f;
 
+    public MovementController movementController;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        currentAbility = AbilitiesState.Empty;
     }
 
     // Update is called once per frame
@@ -49,25 +53,62 @@ public class PlayerController : MonoBehaviour
         SetupRays();
         UpdateStateMachine();
 
+        if (tapeAmmo > 0)
+        {
+            uiAbilities.GetComponent<UI_Abilities>().isTapeCollected = true;
+        }
+        else
+        {
+            uiAbilities.GetComponent<UI_Abilities>().isTapeCollected = false;
+        }
+
         if (Input.GetKeyDown("0"))
         {
             ChangeAbility(AbilitiesState.Empty);
         }
         if (Input.GetKeyDown("1"))
         {
-            ChangeAbility(AbilitiesState.Claws);
-        }
-        if (Input.GetKeyDown("2"))
-        {
-            ChangeAbility(AbilitiesState.Wee);
+            if (currentAbility == AbilitiesState.Claws)
+            {
+                ChangeAbility(AbilitiesState.Empty);
+            }
+            else
+            {
+                ChangeAbility(AbilitiesState.Claws);
+            }
         }
         if (Input.GetKeyDown("3"))
         {
-            ChangeAbility(AbilitiesState.Business);
+            if (currentAbility == AbilitiesState.Wee)
+            {
+                ChangeAbility(AbilitiesState.Empty);
+            }
+            else
+            {
+                ChangeAbility(AbilitiesState.Wee);
+            }
         }
         if (Input.GetKeyDown("4"))
         {
-            ChangeAbility(AbilitiesState.Tape);
+            if (currentAbility == AbilitiesState.Business)
+            {
+                ChangeAbility(AbilitiesState.Empty);
+            }
+            else
+            {
+                ChangeAbility(AbilitiesState.Business);
+            }
+        }
+        if (Input.GetKeyDown("2"))
+        {
+            if (currentAbility == AbilitiesState.Tape)
+            {
+                ChangeAbility(AbilitiesState.Empty);
+            }
+            else
+            {
+                ChangeAbility(AbilitiesState.Tape);
+            }
         }
     }
 
@@ -80,15 +121,15 @@ public class PlayerController : MonoBehaviour
 
         Debug.DrawRay(transform.position, forward * forwardRayDistance, Color.white);
 
-        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, moveableLayerMask))
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, groundLayerMask))
         {
-            objectMoveInRange = true;
+            groundInRange = true;
             objectForward = hitForwardData.collider.gameObject;
             hitPoint = hitForwardData.point;
         }
         else
         {
-            objectMoveInRange = false;
+            groundInRange = false;
         }
 
         if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, interactableLayerMask))
@@ -102,15 +143,15 @@ public class PlayerController : MonoBehaviour
             objectInteractInRange = false;
         }
 
-        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, groundLayerMask))
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, moveableLayerMask))
         {
-            groundInRange = true;
+            objectMoveInRange = true;
             objectForward = hitForwardData.collider.gameObject;
             hitPoint = hitForwardData.point;
         }
         else
         {
-            groundInRange = false;
+            objectMoveInRange = false;
         }
 
         if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, weeLayerMask))
@@ -139,11 +180,12 @@ public class PlayerController : MonoBehaviour
                 break;
 
             case AbilitiesState.Claws:
-                if (Input.GetButton("Fire1"))
+                if (Input.GetButtonDown("Fire1"))
                 {
-                    if ((objectMoveInRange) || (objectInteractInRange))
+                    if (objectMoveInRange)
                     {
                         objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Clawed;
+
                         Vector3 forceDir = objectForward.gameObject.transform.position - transform.position;
                         forceDir.y = 0;
                         forceDir.Normalize();
@@ -154,7 +196,7 @@ public class PlayerController : MonoBehaviour
                 break;
 
             case AbilitiesState.Wee:
-                if (Input.GetButton("Fire1"))
+                if (Input.GetButtonDown("Fire1"))
                 {
                     if ((groundInRange) || (objectInteractInRange))
                     {
@@ -162,13 +204,13 @@ public class PlayerController : MonoBehaviour
                         {
                             objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Wet;
                         }
-                        Instantiate(weeSpawn, hitPoint + new Vector3(0, 0.01f, 0), Quaternion.identity);
+                        Instantiate(weeSpawn, hitPoint + new Vector3(0, -0.1f, 0), Quaternion.identity);
                     }
                 }
                 break;
 
             case AbilitiesState.Business:
-                if (Input.GetButton("Fire1"))
+                if (Input.GetButtonDown("Fire1"))
                 {
                     if ((groundInRange) || (objectInteractInRange))
                     {
@@ -176,18 +218,30 @@ public class PlayerController : MonoBehaviour
                         {
                             objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Duked;
                         }
-                        Instantiate(businessSpawn, hitPoint + new Vector3(0, 0.5f, 0), Quaternion.identity);
+                        Instantiate(businessSpawn, hitPoint + new Vector3(0, 0.1f, 0), Quaternion.Euler(Vector3.right * 90));
                     }
                 }
                 break;
             case AbilitiesState.Tape:
-                if ((Input.GetButton("Fire1")) && (tapeAmmo > 0))
+                if (Input.GetButtonDown("Fire1"))
                 {
-                    if ((objectMoveInRange) || (objectInteractInRange))
+                    //if ((objectMoveInRange) || (objectInteractInRange))
+                    //{
+                    //    objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Taped;
+                    //}
+
+                    if (movementController.GetComponent<MovementController>().stickyCat == true)
                     {
-                        objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Taped;
+                        movementController.GetComponent<MovementController>().StickyModeEnd();
                     }
-                    tapeAmmo -= 1;
+                    else
+                    {
+                        if (tapeAmmo > 0)
+                        {
+                            movementController.GetComponent<MovementController>().stickyCat = true;
+                            TakeTapeAmmo(1);
+                        }
+                    }
                 }
                 break;
 
@@ -197,6 +251,11 @@ public class PlayerController : MonoBehaviour
     public void AddTapeAmmo(int ammo)
     {
         tapeAmmo = tapeAmmo + ammo;
+    }
+
+    public void TakeTapeAmmo(int ammo)
+    {
+        tapeAmmo -= ammo;
     }
 
     public void ChangeAbility(AbilitiesState state)

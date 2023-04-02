@@ -32,10 +32,16 @@ public class MovementController : MonoBehaviour
 
     public LayerMask groundLayerMask;
 
+    [SerializeField]
+    private float stickyTime = 5.0f;
+    float stickyTime_ORG;
+
+    public bool stickyCat = false;
+
     // Start is called before the first frame update
     void Start()
     {
-
+        stickyTime_ORG = stickyTime;
     }
 
     // Update is called once per frame
@@ -77,6 +83,12 @@ public class MovementController : MonoBehaviour
 
         vel.y += gravity * Time.deltaTime;
         charController.Move(vel * Time.deltaTime);
+
+        if (stickyCat)
+        {
+            StickyMode();
+        }
+
     }
 
     public void Move(float horizontalMovement, float verticalMovement, float moveSpeed)
@@ -96,5 +108,25 @@ public class MovementController : MonoBehaviour
         }
 
         vel.y = Mathf.Sqrt(height_ * -2.0f * gravity);
+    }
+
+    public void StickyMode()
+    {
+        vel.y = 50;
+
+        stickyTime -= Time.deltaTime;
+        if (stickyTime < 0.0f)
+        {
+            stickyTime = stickyTime_ORG;
+            vel.y = velRest;
+            stickyCat = false;
+        }
+    }
+
+    public void StickyModeEnd()
+    {
+        stickyTime = stickyTime_ORG;
+        vel.y = velRest;
+        stickyCat = false;
     }
 }

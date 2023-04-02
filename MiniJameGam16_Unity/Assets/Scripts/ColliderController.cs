@@ -12,6 +12,7 @@ public class ColliderController : MonoBehaviour
 
     public MovementController movementController;
     public PlayerController playerController;
+    public Rules rules;
 
     public LayerMask moveableLayerMask;
     public LayerMask interactableLayerMask;
@@ -52,6 +53,11 @@ public class ColliderController : MonoBehaviour
         {
             Destroy(hit.gameObject);
             playerController.GetComponent<PlayerController>().AddTapeAmmo(1);
+        }
+
+        if (hit.gameObject.tag == "Water")
+        {
+            rules.GetComponent<Rules>().Lost();
         }
 
     }

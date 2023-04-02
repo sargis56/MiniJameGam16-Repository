@@ -24,6 +24,8 @@ public class EndGame : MonoBehaviour
         PauseGame();
         youWin.SetActive(true);
         winAnimator.SetTrigger("Victory");
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     public void Loser()
@@ -31,5 +33,7 @@ public class EndGame : MonoBehaviour
         PauseGame();
         youLose.SetActive(true);
         loseAnimator.SetTrigger("Defeat");
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 }

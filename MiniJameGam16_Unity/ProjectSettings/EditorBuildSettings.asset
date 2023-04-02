@@ -12,6 +12,6 @@ EditorBuildSettings:
     path: Assets/Oscar/Scenes/TransitionStory.unity
     guid: 29b89ba3ef4eb1d48b315d1e21a6031e
   - enabled: 1
-    path: Assets/Oscar/Scenes/TestScene.unity
-    guid: 1117612eb0177f94bb03684a1237a799
+    path: Assets/Level-Scene(pre-bake).unity
+    guid: f1c2ecc63088ed14e9b4c86e7dae4991
   m_configObjects: {}
