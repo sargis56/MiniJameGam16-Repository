@@ -12,27 +12,30 @@ public class PlayerController : MonoBehaviour
 
     public LayerMask moveableLayerMask;
     public LayerMask interactableLayerMask;
+    public LayerMask groundLayerMask;
+    public LayerMask weeLayerMask;
+    public LayerMask dukeLayerMask;
 
     public float forwardRayDistance = 7.5f;
     public float forwardRayHeight = 0.0f;
 
     RaycastHit hitForwardData;
-
     Vector3 forward;
-
     Quaternion forwardAngle;
-
     Ray rayForward;
-
     Vector3 hitPoint;
 
     public GameObject objectForward;
     [SerializeField]
     private bool objectMoveInRange = false;
     private bool objectInteractInRange = false;
+    private bool groundInRange = false;
 
     public GameObject weeSpawn;
     public GameObject businessSpawn;
+
+    [SerializeField]
+    private float clawForce = 2.5f;
 
     // Start is called before the first frame update
     void Start()
@@ -99,6 +102,31 @@ public class PlayerController : MonoBehaviour
             objectInteractInRange = false;
         }
 
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, groundLayerMask))
+        {
+            groundInRange = true;
+            objectForward = hitForwardData.collider.gameObject;
+            hitPoint = hitForwardData.point;
+        }
+        else
+        {
+            groundInRange = false;
+        }
+
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, weeLayerMask))
+        {
+            objectMoveInRange = false;
+            objectForward = hitForwardData.collider.gameObject;
+            objectInteractInRange = false;
+        }
+
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, dukeLayerMask))
+        {
+            objectMoveInRange = false;
+            objectForward = hitForwardData.collider.gameObject;
+            objectInteractInRange = false;
+        }
+
         Debug.DrawRay(transform.position, forward * hitForwardData.distance, Color.yellow);
     }
 
@@ -116,6 +144,11 @@ public class PlayerController : MonoBehaviour
                     if ((objectMoveInRange) || (objectInteractInRange))
                     {
                         objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Clawed;
+                        Vector3 forceDir = objectForward.gameObject.transform.position - transform.position;
+                        forceDir.y = 0;
+                        forceDir.Normalize();
+
+                        objectForward.GetComponent<Collider>().attachedRigidbody.AddForceAtPosition(forceDir * clawForce, transform.position, ForceMode.Impulse);
                     }
                 }
                 break;
@@ -123,11 +156,13 @@ public class PlayerController : MonoBehaviour
             case AbilitiesState.Wee:
                 if (Input.GetButton("Fire1"))
                 {
-                    if ((objectMoveInRange) || (objectInteractInRange))
+                    if ((groundInRange) || (objectInteractInRange))
                     {
-                        objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Wet;
+                        if (objectForward.gameObject.layer != LayerMask.NameToLayer("Ground"))
+                        {
+                            objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Wet;
+                        }
                         Instantiate(weeSpawn, hitPoint + new Vector3(0, 0.01f, 0), Quaternion.identity);
-
                     }
                 }
                 break;
@@ -135,9 +170,13 @@ public class PlayerController : MonoBehaviour
             case AbilitiesState.Business:
                 if (Input.GetButton("Fire1"))
                 {
-                    if (objectInteractInRange)
+                    if ((groundInRange) || (objectInteractInRange))
                     {
-                        objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Duked;
+                        if (objectForward.gameObject.layer != LayerMask.NameToLayer("Ground"))
+                        {
+                            objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Duked;
+                        }
+                        Instantiate(businessSpawn, hitPoint + new Vector3(0, 0.5f, 0), Quaternion.identity);
                     }
                 }
                 break;
