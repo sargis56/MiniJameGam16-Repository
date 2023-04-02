@@ -4,15 +4,38 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public enum AbilitiesState { Empty, Claws, Wee, Business, Tape };
     [SerializeField]
-    private float initialMagntiude = 5;
+    private AbilitiesState currentAbility;
     [SerializeField]
-    private float sprintingMagntiude = 10;
-    private float forceMagntiude;
-
-    public MovementController movementController;
+    private int tapeAmmo = 0;
 
     public LayerMask moveableLayerMask;
+    public LayerMask interactableLayerMask;
+    public LayerMask groundLayerMask;
+    public LayerMask weeLayerMask;
+    public LayerMask dukeLayerMask;
+
+    public float forwardRayDistance = 7.5f;
+    public float forwardRayHeight = 0.0f;
+
+    RaycastHit hitForwardData;
+    Vector3 forward;
+    Quaternion forwardAngle;
+    Ray rayForward;
+    Vector3 hitPoint;
+
+    public GameObject objectForward;
+    [SerializeField]
+    private bool objectMoveInRange = false;
+    private bool objectInteractInRange = false;
+    private bool groundInRange = false;
+
+    public GameObject weeSpawn;
+    public GameObject businessSpawn;
+
+    [SerializeField]
+    private float clawForce = 2.5f;
 
     // Start is called before the first frame update
     void Start()
@@ -23,29 +46,162 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (movementController.GetComponent<MovementController>().sprinting)
+        SetupRays();
+        UpdateStateMachine();
+
+        if (Input.GetKeyDown("0"))
         {
-            forceMagntiude = initialMagntiude;
+            ChangeAbility(AbilitiesState.Empty);
+        }
+        if (Input.GetKeyDown("1"))
+        {
+            ChangeAbility(AbilitiesState.Claws);
+        }
+        if (Input.GetKeyDown("2"))
+        {
+            ChangeAbility(AbilitiesState.Wee);
+        }
+        if (Input.GetKeyDown("3"))
+        {
+            ChangeAbility(AbilitiesState.Business);
+        }
+        if (Input.GetKeyDown("4"))
+        {
+            ChangeAbility(AbilitiesState.Tape);
+        }
+    }
+
+    void SetupRays()
+    {
+        //Forward ray setup
+        forwardAngle = Quaternion.AngleAxis(0.0f, new Vector3(0, -1, 0));
+        forward = forwardAngle * (transform.forward + new Vector3(0, forwardRayHeight, 0));
+        rayForward = new Ray(transform.position, forward);
+
+        Debug.DrawRay(transform.position, forward * forwardRayDistance, Color.white);
+
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, moveableLayerMask))
+        {
+            objectMoveInRange = true;
+            objectForward = hitForwardData.collider.gameObject;
+            hitPoint = hitForwardData.point;
         }
         else
         {
-            forceMagntiude = sprintingMagntiude;
+            objectMoveInRange = false;
         }
-    }
 
-    private void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        Rigidbody rigidbody = hit.collider.attachedRigidbody;
-
-        if ((rigidbody != null) && (hit.collider.gameObject.layer == LayerMask.NameToLayer("Moveable")))
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, interactableLayerMask))
         {
-            Vector3 forceDir = hit.gameObject.transform.position - transform.position;
-            forceDir.y = 0;
-            forceDir.Normalize();
+            objectInteractInRange = true;
+            objectForward = hitForwardData.collider.gameObject;
+            hitPoint = hitForwardData.point;
+        }
+        else
+        {
+            objectInteractInRange = false;
+        }
 
-            rigidbody.AddForceAtPosition(forceDir * forceMagntiude, transform.position, ForceMode.Impulse);
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, groundLayerMask))
+        {
+            groundInRange = true;
+            objectForward = hitForwardData.collider.gameObject;
+            hitPoint = hitForwardData.point;
+        }
+        else
+        {
+            groundInRange = false;
+        }
+
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, weeLayerMask))
+        {
+            objectMoveInRange = false;
+            objectForward = hitForwardData.collider.gameObject;
+            objectInteractInRange = false;
+        }
+
+        if (Physics.Raycast(rayForward, out hitForwardData, forwardRayDistance, dukeLayerMask))
+        {
+            objectMoveInRange = false;
+            objectForward = hitForwardData.collider.gameObject;
+            objectInteractInRange = false;
+        }
+
+        Debug.DrawRay(transform.position, forward * hitForwardData.distance, Color.yellow);
+    }
+
+    void UpdateStateMachine()
+    {
+        switch (currentAbility)
+        {
+            case AbilitiesState.Empty:
+
+                break;
+
+            case AbilitiesState.Claws:
+                if (Input.GetButton("Fire1"))
+                {
+                    if ((objectMoveInRange) || (objectInteractInRange))
+                    {
+                        objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Clawed;
+                        Vector3 forceDir = objectForward.gameObject.transform.position - transform.position;
+                        forceDir.y = 0;
+                        forceDir.Normalize();
+
+                        objectForward.GetComponent<Collider>().attachedRigidbody.AddForceAtPosition(forceDir * clawForce, transform.position, ForceMode.Impulse);
+                    }
+                }
+                break;
+
+            case AbilitiesState.Wee:
+                if (Input.GetButton("Fire1"))
+                {
+                    if ((groundInRange) || (objectInteractInRange))
+                    {
+                        if (objectForward.gameObject.layer != LayerMask.NameToLayer("Ground"))
+                        {
+                            objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Wet;
+                        }
+                        Instantiate(weeSpawn, hitPoint + new Vector3(0, 0.01f, 0), Quaternion.identity);
+                    }
+                }
+                break;
+
+            case AbilitiesState.Business:
+                if (Input.GetButton("Fire1"))
+                {
+                    if ((groundInRange) || (objectInteractInRange))
+                    {
+                        if (objectForward.gameObject.layer != LayerMask.NameToLayer("Ground"))
+                        {
+                            objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Duked;
+                        }
+                        Instantiate(businessSpawn, hitPoint + new Vector3(0, 0.5f, 0), Quaternion.identity);
+                    }
+                }
+                break;
+            case AbilitiesState.Tape:
+                if ((Input.GetButton("Fire1")) && (tapeAmmo > 0))
+                {
+                    if ((objectMoveInRange) || (objectInteractInRange))
+                    {
+                        objectForward.GetComponent<ObjectController>().currentState = ObjectController.ObjectState.Taped;
+                    }
+                    tapeAmmo -= 1;
+                }
+                break;
 
         }
-        
     }
+
+    public void AddTapeAmmo(int ammo)
+    {
+        tapeAmmo = tapeAmmo + ammo;
+    }
+
+    public void ChangeAbility(AbilitiesState state)
+    {
+        currentAbility = state;
+    }
+
 }
