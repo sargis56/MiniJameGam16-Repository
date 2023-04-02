@@ -12,16 +12,9 @@ public class MainMenu : MonoBehaviour
     public GameObject audioScreen;
     public GameObject creditsScreen;
 
-    private void Start()
-    {
-        mainScreen.SetActive(true);
-        audioScreen.SetActive(false);
-        creditsScreen.SetActive(false);
-    }
-
     public void StartGame(int sceneID)
     {
-        soundEffect.Play();
+        //soundEffect.Play();
         SceneManager.LoadScene(sceneID);
     }
 

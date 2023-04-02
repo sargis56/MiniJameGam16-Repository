@@ -9,28 +9,6 @@ public class EndGame : MonoBehaviour
     public GameObject youWin;
     public GameObject youLose;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        youWin.SetActive(false);
-        youLose.SetActive(false);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //remove this later, linked victory anim to appear on button press for testing purposes
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            Winner();
-        }
-
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            Loser();
-        }
-    }
-
     void PauseGame()
     {
         Time.timeScale = 0;
@@ -41,14 +19,14 @@ public class EndGame : MonoBehaviour
         Time.timeScale = 1;
     }
 
-    void Winner()
+    public void Winner()
     {
         PauseGame();
         youWin.SetActive(true);
         winAnimator.SetTrigger("Victory");
     }
 
-    void Loser()
+    public void Loser()
     {
         PauseGame();
         youLose.SetActive(true);

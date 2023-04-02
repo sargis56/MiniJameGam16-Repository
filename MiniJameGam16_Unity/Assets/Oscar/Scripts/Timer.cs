@@ -5,16 +5,13 @@ using UnityEngine.UI;
 
 public class Timer : MonoBehaviour
 {
+    public EndGame endGame;
     public Slider slider;
     public float countdownTime = 300f;
     private float currentTime; 
 
     void Start()
     {
-        //currentTime = countdownTime;
-        //slider.maxValue = countdownTime;
-        //slider.value = countdownTime;
-
         currentTime = slider.value = 0;
         slider.maxValue = countdownTime;
     }
@@ -26,8 +23,9 @@ public class Timer : MonoBehaviour
 
         if (currentTime >= countdownTime )
         {
-            //have the YouLose screen pop up here later
-            Debug.Log("You Lose!");
+            //have the YouLose screen pop up here
+            currentTime = 299.0f;
+            endGame.Loser();
         }
     }
 }
